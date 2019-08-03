@@ -5,6 +5,8 @@ from .utils import download_url, check_integrity
 import os
 from .vision import VisionDataset
 
+from torch.utils.model_zoo import tqdm
+
 
 class SBU(VisionDataset):
     """`SBU Captioned Photo <http://www.cs.virginia.edu/~vicente/sbucaptions/>`_ Dataset.
@@ -96,13 +98,20 @@ class SBU(VisionDataset):
         with tarfile.open(os.path.join(self.root, self.filename), 'r:gz') as tar:
             tar.extractall(path=self.root)
 
+
         # Download individual photos
         with open(os.path.join(self.root, 'dataset', 'SBU_captioned_photo_dataset_urls.txt')) as fh:
+            pbar = tqdm(total=len(fh.readlines()))
+            fh.seek(0)
+
+            print("Downloading individual images. {} urls in total".format(pbar.total))
+
             for line in fh:
                 url = line.rstrip()
                 try:
-                    download_url(url, os.path.join(self.root, 'dataset'))
+                    download_url(url, os.path.join(self.root, 'dataset'), quiet=True)
                 except OSError:
                     # The images point to public images on Flickr.
                     # Note: Images might be removed by users at anytime.
                     pass
+                pbar.update(1)

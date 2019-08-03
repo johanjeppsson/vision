@@ -55,7 +55,13 @@ def makedir_exist_ok(dirpath):
             raise
 
 
-def download_url(url, root, filename=None, md5=None):
+def message(msg, quiet=False):
+    """Print message if quiet is not set."""
+    if not quiet:
+        print(msg)
+
+
+def download_url(url, root, filename=None, md5=None, quiet=False):
     """Download a file from a url and place it in root.
 
     Args:
@@ -63,6 +69,7 @@ def download_url(url, root, filename=None, md5=None):
         root (str): Directory to place downloaded file in
         filename (str, optional): Name to save the file under. If None, use the basename of the URL
         md5 (str, optional): MD5 checksum of the download. If None, do not check
+        quiet (bool, optional): Don't print download/verification messages.
     """
     from six.moves import urllib
 
@@ -75,22 +82,22 @@ def download_url(url, root, filename=None, md5=None):
 
     # downloads file
     if check_integrity(fpath, md5):
-        print('Using downloaded and verified file: ' + fpath)
+        message('Using downloaded and verified file: ' + fpath, quiet=quiet)
     else:
         try:
-            print('Downloading ' + url + ' to ' + fpath)
+            message('Downloading ' + url + ' to ' + fpath, quiet=quiet)
             urllib.request.urlretrieve(
                 url, fpath,
-                reporthook=gen_bar_updater()
+                reporthook=gen_bar_updater() if not quiet else None
             )
         except urllib.error.URLError as e:
             if url[:5] == 'https':
                 url = url.replace('https:', 'http:')
-                print('Failed download. Trying https -> http instead.'
-                      ' Downloading ' + url + ' to ' + fpath)
+                message('Failed download. Trying https -> http instead.'
+                      ' Downloading ' + url + ' to ' + fpath, quiet=quiet)
                 urllib.request.urlretrieve(
                     url, fpath,
-                    reporthook=gen_bar_updater()
+                    reporthook=gen_bar_updater() if not quiet else None
                 )
             else:
                 raise e
